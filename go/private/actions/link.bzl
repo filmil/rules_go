@@ -140,6 +140,12 @@ def emit_link(
     ]))
     extldflags.extend(cgo_rpaths)
 
+    # BUG: Have we forgotten about the .a files?
+    for f in archive.cgo_deps.to_list():
+        extldflags.extend(["-L", f.dirname, "-l{}".format(f.basename[3:-2])])
+    # We will need to link with stdc++ too if we want C++ stdlib to work.
+    extldflags.extend(["-lstdc++"])
+
     # Process x_defs, and record whether stamping is used.
     stamp_x_defs_volatile = False
     stamp_x_defs_stable = False
@@ -187,6 +193,7 @@ def emit_link(
         go.stdlib.libs,
     ]
     inputs = depset(direct = inputs_direct, transitive = inputs_transitive)
+
 
     go.actions.run(
         inputs = inputs,
